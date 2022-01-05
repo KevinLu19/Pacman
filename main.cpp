@@ -1,5 +1,6 @@
 #include <SFML/Graphics.hpp>
 #include <iostream>
+#include <chrono>
 
 /*
     How to compile and run this file:
@@ -15,12 +16,19 @@
     ./sfml-app
 */
 
+class Animation
+{
+    public:
+    private:
+        sf::Texture texture;
+};
+
 class PacMan
 {
     public:
         PacMan()
         {
-            // Load Texture and sprites.
+            //Load Texture and sprites.
             if (!game_map.loadFromFile("sprites/map.jpg"))
             {
                 std::cerr << "Could not load pacman map!" << std::endl;
@@ -40,8 +48,10 @@ class PacMan
             // Sub-dividing pacman image to grab only one form of the sprite from animation file.
             // Uses sub rectangle within the file to get what I need.
             // Got 16 because 128 (width pixel) divide by 8 (8 iterations of animation) = 16
-            sprite_pacman.setTextureRect({16,0, 16, 16 });
-            sprite_pacman.scale(sf::Vector2f(1.5f, 1.5f));
+            sprite_pacman.setTextureRect({0,0, 16, 16 });
+            sprite_pacman.scale(sf::Vector2f(2.5f, 2.5f));
+            sprite_pacman.setPosition(sf::Vector2f(1000000000000000.0f, 100000000000000000000.0f));
+
         }
 
         void draw(sf::RenderTarget& render) const
@@ -62,7 +72,7 @@ class PacMan
         }
 
     private:
-        static constexpr float speed = 10.0f;
+        static constexpr float speed = 300.0f;
         sf::Vector2f position;
         sf::Vector2f velocity = {0.0f, 0.0f};
         sf::Texture game_map, pacman;
@@ -75,6 +85,10 @@ int main()
     
     PacMan best_pacman_game_ever;
 
+    // Keeping track of time.
+    // Use this in order to be able to move within certain fps ranges. E.g. Move x pixels in 30 fps. 
+    auto tp = std::chrono::steady_clock::now();
+
     while (window.isOpen())
     {
         sf::Event event;
@@ -82,6 +96,14 @@ int main()
         {
             if (event.type == sf::Event::Closed)
                 window.close(); 
+        }
+
+        // Get DT
+        float dt;
+        {
+            const auto newtp = std::chrono::steady_clock::now();
+            dt = std::chrono::duration<float>(newtp - tp).count();
+            tp = newtp;
         }
 
         // Event Hanlde Inputs
@@ -97,9 +119,9 @@ int main()
         
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right))
             dir.x += 1.0f;
-        best_pacman_game_ever.set_direction(dir);
+        best_pacman_game_ever.set_direction(dir); 
 
-        best_pacman_game_ever.update(1.0f/ 60.0f);
+        best_pacman_game_ever.update(dt);
 
         window.clear();
         best_pacman_game_ever.draw(window);
